@@ -38,8 +38,7 @@ bool TftDisplay::begin() {
     ioCfg.lcd_cmd_bits      = 8;
     ioCfg.lcd_param_bits    = 8;
 
-    ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi(
-        reinterpret_cast<esp_lcd_spi_bus_handle_t>(SPI2_HOST), &ioCfg, &io_));
+    ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi(SPI2_HOST, &ioCfg, &io_));
 
     // 3. ST7789 panel
     esp_lcd_panel_dev_config_t panelCfg = {};

@@ -110,26 +110,22 @@ void DinoGame::update() {
     uint8_t btn = input_.justPressed();
 
     switch (state_) {
-    case GameState::READY:
+    case GameState::READY: {
         if (btn & BTN_A_M) {
             state_ = GameState::PLAYING;
             tft_.fillScreen(COLOR_WHITE);
         }
         break;
+    }
 
-    case GameState::PLAYING:
+    case GameState::PLAYING: {
         // 清除上一帧
         {
             int16_t dinoY = dino_.y;
             int16_t dinoH = dino_.ducking ? DINO_DUCK_H : DINO_H;
+            (void)dinoY; (void)dinoH;
             // 清除恐龙旧位置
             tft_.fillRect(DINO_X, 0, DINO_W, GROUND_Y, COLOR_WHITE);
-            // 清除障碍物旧位置
-            for (auto& o : obs_) {
-                if (o.active) {
-                    // 用上次位置清除
-                }
-            }
         }
 
         // 输入处理
@@ -160,12 +156,19 @@ void DinoGame::update() {
         frame_++;
 
         // 碰撞检测
-        int16_t dinoY = dino_.y;
-        int16_t dinoH = dino_.ducking ? DINO_DUCK_H : DINO_H;
-        for (auto& o : obs_) {
-            if (!o.active) continue;
-            if (DINO_X < o.x + o.w && DINO_X + DINO_W > o.x &&
-                dinoY < o.y + o.h && dinoY + dinoH > o.y) {
+        {
+            int16_t dinoY = dino_.y;
+            int16_t dinoH = dino_.ducking ? DINO_DUCK_H : DINO_H;
+            bool hit = false;
+            for (auto& o : obs_) {
+                if (!o.active) continue;
+                if (DINO_X < o.x + o.w && DINO_X + DINO_W > o.x &&
+                    dinoY < o.y + o.h && dinoY + dinoH > o.y) {
+                    hit = true;
+                    break;
+                }
+            }
+            if (hit) {
                 state_ = GameState::GAMEOVER;
                 tft_.fillScreen(COLOR_WHITE);
                 // 显示 GAME OVER
@@ -181,14 +184,15 @@ void DinoGame::update() {
                     if (*p != ':') tft_.fillRect(gx, 100, 5, 7, COLOR_GRAY);
                     gx += 7;
                 }
-                return;
+                break;
             }
         }
+
+        if (state_ == GameState::GAMEOVER) break;
 
         // 清除障碍物旧区域
         for (auto& o : obs_) {
             if (!o.active) continue;
-            // 清除障碍物走过的区域
             tft_.fillRect(o.x + int16_t(speed_), o.y, int16_t(speed_) + 2, o.h, COLOR_WHITE);
         }
 
@@ -198,14 +202,16 @@ void DinoGame::update() {
         drawObstacles();
         drawScore();
         break;
+    }
 
-    case GameState::GAMEOVER:
+    case GameState::GAMEOVER: {
         if (btn & BTN_A_M) {
             resetGame();
             state_ = GameState::PLAYING;
             tft_.fillScreen(COLOR_WHITE);
         }
         break;
+    }
     }
 }
 
