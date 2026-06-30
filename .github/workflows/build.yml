@@ -1,0 +1,49 @@
+# ────────────────────────────────────────────
+# ESP-IDF 固件构建 CI
+# 使用官方 espressif/esp-idf-ci-action@v1
+# 在 push / PR 时自动编译 ESP32 项目
+# ────────────────────────────────────────────
+
+name: Build Firmware
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - '**.md'
+      - '.github/copilot-instructions.md'
+  pull_request:
+    branches: [main, master]
+    paths-ignore:
+      - '**.md'
+      - '.github/copilot-instructions.md'
+  workflow_dispatch:   # 支持手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: 构建 ESP32 固件 (IDF v5.4)
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.4
+          target: esp32
+          path: '.'
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: |
+            build/*.bin
+            build/*.elf
+            build/flash_args
+            build/partition_table/partition-table.bin
+            build/bootloader/bootloader.bin
+          retention-days: 30
