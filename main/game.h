@@ -1,6 +1,7 @@
 #pragma once
 #include "tft_display.h"
 #include "input.h"
+#include "lvgl.h"
 #include <cstdint>
 
 /**
@@ -29,6 +30,7 @@ struct Dino {
     void update() {
         y  += int16_t(vy);
         vy += GRAVITY;
+        if (y < 0) y = 0;                               // clamp top
         if (y >= GROUND_Y - DINO_H) { y = GROUND_Y - DINO_H; vy = 0; jumping = false; }
     }
     void reset() { y = GROUND_Y - DINO_H; vy = 0; jumping = false; ducking = false; }
@@ -53,6 +55,8 @@ private:
     void drawDino();
     void drawObstacles();
     void drawScore();
+    void drawChar(uint16_t x, uint16_t y, char ch, uint16_t color, const lv_font_t* font);
+    void drawString(uint16_t x, uint16_t y, const char* str, uint16_t color, const lv_font_t* font = nullptr);
     void spawnObstacle();
     void resetGame();
 

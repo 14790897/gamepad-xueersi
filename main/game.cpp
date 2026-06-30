@@ -1,6 +1,11 @@
 #include "game.h"
+#include "lvgl.h"
+#include "font/fmt_txt/lv_font_fmt_txt.h"
 #include <cstdio>
 #include <cstring>
+
+// Extern declare LVGL fonts (not in lvgl.h for unscii)
+LV_FONT_DECLARE(lv_font_montserrat_14);
 
 // ──────────── 恐龙像素图 20x24 (RGB565) ────────────
 // 0 = 透明, else = 像素颜色
@@ -75,20 +80,8 @@ const uint16_t DinoGame::birdImg[] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 };
 
-// ──────────── 数字 0-9 简单 5x7 像素图 ────────────
-static const uint16_t digitW = 5, digitH = 7;
-static const uint8_t digits[10][7] = {
-    {0x0E,0x11,0x11,0x11,0x11,0x11,0x0E},  // 0
-    {0x04,0x0C,0x04,0x04,0x04,0x04,0x0E},  // 1
-    {0x0E,0x11,0x01,0x0E,0x10,0x10,0x1F},  // 2
-    {0x0E,0x11,0x01,0x0E,0x01,0x11,0x0E},  // 3
-    {0x02,0x06,0x0A,0x12,0x1F,0x02,0x02},  // 4
-    {0x1F,0x10,0x1E,0x01,0x01,0x11,0x0E},  // 5
-    {0x0E,0x10,0x10,0x1E,0x11,0x11,0x0E},  // 6
-    {0x1F,0x01,0x02,0x04,0x08,0x08,0x08},  // 7
-    {0x0E,0x11,0x11,0x0E,0x11,0x11,0x0E},  // 8
-    {0x0E,0x11,0x11,0x0F,0x01,0x11,0x0E},  // 9
-};
+// ──────────── 字体：使用 LVGL 内置 Montserrat 14 ────────────
+static const lv_font_t* gameFont = &lv_font_montserrat_14;
 
 // ──────────── 游戏实现 ────────────
 
@@ -98,12 +91,7 @@ void DinoGame::begin() {
     drawDino();
 
     // 显示提示
-    const char* txt = "Press A";
-    uint16_t x = 100;
-    for (const char* p = txt; *p; p++) {
-        tft_.fillRect(x, 60, 5, 7, COLOR_GRAY);
-        x += 7;
-    }
+    drawString(85, 60, "Press A", COLOR_GRAY);
 }
 
 void DinoGame::update() {
@@ -119,16 +107,9 @@ void DinoGame::update() {
     }
 
     case GameState::PLAYING: {
-        // 清除上一帧
-        {
-            int16_t dinoY = dino_.y;
-            int16_t dinoH = dino_.ducking ? DINO_DUCK_H : DINO_H;
-            (void)dinoY; (void)dinoH;
-            // 清除恐龙旧位置
-            tft_.fillRect(DINO_X, 0, DINO_W, GROUND_Y, COLOR_WHITE);
-        }
+        // 全局刷新：先清屏，再画所有元素
+        tft_.fillScreen(COLOR_WHITE);
 
-        // 输入处理
         if (input_.read() & BTN_A_M) dino_.jump();
         dino_.ducking = (input_.read() & BTN_B_M) && !dino_.jumping;
 
@@ -171,32 +152,15 @@ void DinoGame::update() {
             if (hit) {
                 state_ = GameState::GAMEOVER;
                 tft_.fillScreen(COLOR_WHITE);
-                // 显示 GAME OVER
-                const char* go = "GAME OVER";
-                uint16_t gx = 75;
-                for (const char* p = go; *p; p++) {
-                    if (*p != ' ') tft_.fillRect(gx, 80, 5, 7, COLOR_RED);
-                    gx += 7;
-                }
-                const char* rs = "A:Restart";
-                gx = 85;
-                for (const char* p = rs; *p; p++) {
-                    if (*p != ':') tft_.fillRect(gx, 100, 5, 7, COLOR_GRAY);
-                    gx += 7;
-                }
+                drawString(70, 80, "GAME OVER", COLOR_RED);
+                drawString(85, 100, "A:Restart", COLOR_GRAY);
                 break;
             }
         }
 
         if (state_ == GameState::GAMEOVER) break;
 
-        // 清除障碍物旧区域
-        for (auto& o : obs_) {
-            if (!o.active) continue;
-            tft_.fillRect(o.x + int16_t(speed_), o.y, int16_t(speed_) + 2, o.h, COLOR_WHITE);
-        }
-
-        // 绘制
+        // 绘制所有元素
         drawGround();
         drawDino();
         drawObstacles();
@@ -216,8 +180,8 @@ void DinoGame::update() {
 }
 
 void DinoGame::drawGround() {
-    // 地面线
-    tft_.drawFastHLine(0, GROUND_Y, 240, COLOR_GRAY);
+    // 地面水平线
+    tft_.fillRect(0, GROUND_Y, 240, 2, COLOR_GRAY);
     // 地面虚线装饰
     for (int x = frame_ % 8; x < 240; x += 8) {
         tft_.fillRect(x, GROUND_Y + 3, 4, 2, COLOR_DARKGRAY);
@@ -239,7 +203,7 @@ void DinoGame::drawDino() {
     // 腿
     int legPhase = (frame_ / 4) % 2;
     if (!dino_.jumping) {
-        tft_.fillRect(DINO_X + 2,  dinoY + dinoH, 3, 4, bodyColor);
+        tft_.fillRect(DINO_X + 2, dinoY + dinoH, 3, 4, bodyColor);
         tft_.fillRect(DINO_X + 10, dinoY + dinoH - legPhase * 2, 3, 4, bodyColor);
     } else {
         tft_.fillRect(DINO_X + 6, dinoY + dinoH, 8, 2, bodyColor);
@@ -254,22 +218,100 @@ void DinoGame::drawObstacles() {
 }
 
 void DinoGame::drawScore() {
-    // 右上角显示分数，用简单 5x7 字体
+    // 右上角显示分数 (LVGL 字体)
     char buf[16];
     snprintf(buf, sizeof(buf), "%lu", score_);
-    uint16_t cx = 235;
-    for (int i = strlen(buf) - 1; i >= 0; i--) {
-        int d = buf[i] - '0';
-        if (d < 0 || d > 9) continue;
-        for (int y = 0; y < digitH; y++) {
-            uint8_t row = digits[d][y];
-            for (int x = 0; x < digitW; x++) {
-                if (row & (1 << (digitW - 1 - x))) {
-                    tft_.fillRect(cx + x, 5 + y, 1, 1, COLOR_GRAY);
-                }
+    drawString(2, 2, buf, COLOR_GRAY, gameFont);
+}
+
+void DinoGame::drawChar(uint16_t x, uint16_t y, char ch, uint16_t color, const lv_font_t* font) {
+    if (!font) font = gameFont;
+    if (ch == ' ') return;
+
+    lv_font_glyph_dsc_t dsc;
+    if (!lv_font_get_glyph_dsc(font, &dsc, ch, '\0')) return;
+    if (dsc.format >= LV_FONT_GLYPH_FORMAT_VECTOR) return;
+    if (dsc.box_w == 0 || dsc.box_h == 0) return;
+
+    // Get raw bitmap by calling get_glyph_bitmap with req_raw_bitmap=1 and NULL draw_buf
+    dsc.req_raw_bitmap = 1;
+    const uint8_t* bitmap = (const uint8_t*)font->get_glyph_bitmap(&dsc, NULL);
+    dsc.req_raw_bitmap = 0;
+    if (!bitmap) return;
+
+    // Get bpp from the font's internal descriptor
+    lv_font_fmt_txt_dsc_t* fdsc = (lv_font_fmt_txt_dsc_t*)font->dsc;
+    int bpp = fdsc->bpp;
+    int w = dsc.box_w;
+    int h = dsc.box_h;
+
+    int16_t sx = x + dsc.ofs_x;
+    int16_t sy = y + dsc.ofs_y;
+
+    // Exact LVGL internal decoding algorithm (copied from lv_font_fmt_txt.c)
+    static const uint8_t opa4_table[16] = {0,17,34,51,68,85,102,119,136,153,170,187,204,221,238,255};
+    static const uint8_t opa2_table[4] = {0, 85, 170, 255};
+
+    if (bpp == 1) {
+        int i = 0;
+        for (int row = 0; row < h; row++) {
+            for (int col = 0; col < w; col++, i++) {
+                i = i & 0x7;
+                uint8_t val = 0;
+                if (i == 0) val = (*bitmap) & 0x80 ? 0xFF : 0x00;
+                else if (i == 1) val = (*bitmap) & 0x40 ? 0xFF : 0x00;
+                else if (i == 2) val = (*bitmap) & 0x20 ? 0xFF : 0x00;
+                else if (i == 3) val = (*bitmap) & 0x10 ? 0xFF : 0x00;
+                else if (i == 4) val = (*bitmap) & 0x08 ? 0xFF : 0x00;
+                else if (i == 5) val = (*bitmap) & 0x04 ? 0xFF : 0x00;
+                else if (i == 6) val = (*bitmap) & 0x02 ? 0xFF : 0x00;
+                else if (i == 7) { val = (*bitmap) & 0x01 ? 0xFF : 0x00; bitmap++; }
+                if (val > 128) tft_.fillRect(sx + col, sy + row, 1, 1, color);
             }
         }
-        cx -= (digitW + 1);
+    } else if (bpp == 2) {
+        int i = 0;
+        for (int row = 0; row < h; row++) {
+            for (int col = 0; col < w; col++, i++) {
+                i = i & 0x3;
+                uint8_t val = 0;
+                if (i == 0) val = opa2_table[(*bitmap) >> 6];
+                else if (i == 1) val = opa2_table[((*bitmap) >> 4) & 0x3];
+                else if (i == 2) val = opa2_table[((*bitmap) >> 2) & 0x3];
+                else if (i == 3) { val = opa2_table[(*bitmap) & 0x3]; bitmap++; }
+                if (val > 128) tft_.fillRect(sx + col, sy + row, 1, 1, color);
+            }
+        }
+    } else if (bpp == 4) {
+        int i = 0;
+        for (int row = 0; row < h; row++) {
+            for (int col = 0; col < w; col++, i++) {
+                i = i & 0x1;
+                uint8_t val;
+                if (i == 0) val = opa4_table[(*bitmap) >> 4];
+                else { val = opa4_table[(*bitmap) & 0xF]; bitmap++; }
+                if (val > 128) tft_.fillRect(sx + col, sy + row, 1, 1, color);
+            }
+        }
+    } else if (bpp == 8) {
+        for (int row = 0; row < h; row++) {
+            for (int col = 0; col < w; col++) {
+                if (*bitmap > 128) tft_.fillRect(sx + col, sy + row, 1, 1, color);
+                bitmap++;
+            }
+        }
+    }
+}
+
+void DinoGame::drawString(uint16_t x, uint16_t y, const char* str, uint16_t color, const lv_font_t* font) {
+    if (!font) font = gameFont;
+    while (*str) {
+        drawChar(x, y, *str, color, font);
+        lv_font_glyph_dsc_t dsc;
+        if (lv_font_get_glyph_dsc(font, &dsc, *str, '\0')) {
+            x += dsc.adv_w;  // advance horizontally
+        }
+        str++;
     }
 }
 

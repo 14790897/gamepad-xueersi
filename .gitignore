@@ -1,0 +1,34 @@
+# ESP-IDF build output
+build/
+
+# Managed components (auto-downloaded)
+managed_components/
+
+# Dependencies lock file (auto-generated)
+dependencies.lock
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Build artifacts
+*.o
+*.elf
+*.bin
+*.map
+*.hex
+
+# sdkconfig backup
+sdkconfig.old
