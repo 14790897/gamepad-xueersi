@@ -5,5 +5,5 @@ idf_component_register(
         "input.cpp"
         "buzzer.cpp"
     INCLUDE_DIRS "."
-    REQUIRES driver esp_lcd
+    REQUIRES driver esp_lcd tft_display
 )
