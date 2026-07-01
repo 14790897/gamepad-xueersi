@@ -23,8 +23,8 @@ constexpr gpio_num_t PIN_TFT_CS   = GPIO_NUM_5;
 constexpr gpio_num_t PIN_TFT_DC   = GPIO_NUM_4;
 constexpr gpio_num_t PIN_TFT_RST  = GPIO_NUM_19;
 
-constexpr uint16_t TFT_WIDTH  = 240;
-constexpr uint16_t TFT_HEIGHT = 240;
+constexpr uint16_t TFT_WIDTH  = 160;
+constexpr uint16_t TFT_HEIGHT = 128;
 
 // RGB565 常用颜色
 constexpr uint16_t COLOR_BLACK     = 0x0000;

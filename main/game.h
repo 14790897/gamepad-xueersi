@@ -6,17 +6,17 @@
 
 /**
  * 谷歌小恐龙 Chrome Dino 游戏
- * 游戏区域: 240x240, 地面线 y=200
+ * 游戏区域: 160x128, 地面线 y=108
  * A键: 跳跃 / 开始    B键: 下蹲
  */
 
-constexpr int16_t GROUND_Y   = 200;
-constexpr int16_t DINO_X     = 30;
-constexpr int16_t DINO_W     = 20;
-constexpr int16_t DINO_H     = 24;
-constexpr int16_t DINO_DUCK_H = 14;
-constexpr float   GRAVITY    = 0.7f;
-constexpr float   JUMP_VEL   = -9.0f;
+constexpr int16_t GROUND_Y   = 108;
+constexpr int16_t DINO_X     = 16;
+constexpr int16_t DINO_W     = 14;
+constexpr int16_t DINO_H     = 18;
+constexpr int16_t DINO_DUCK_H = 10;
+constexpr float   GRAVITY    = 0.5f;
+constexpr float   JUMP_VEL   = -7.0f;
 
 struct Dino {
     int16_t y      = GROUND_Y - DINO_H;

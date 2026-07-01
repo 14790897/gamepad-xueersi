@@ -91,7 +91,7 @@ void DinoGame::begin() {
     drawDino();
 
     // 显示提示
-    drawString(85, 60, "Press A", COLOR_GRAY);
+    drawString(52, 40, "Press A", COLOR_GRAY);
 }
 
 void DinoGame::update() {
@@ -152,8 +152,8 @@ void DinoGame::update() {
             if (hit) {
                 state_ = GameState::GAMEOVER;
                 tft_.fillScreen(COLOR_WHITE);
-                drawString(70, 80, "GAME OVER", COLOR_RED);
-                drawString(85, 100, "A:Restart", COLOR_GRAY);
+                drawString(44, 40, "GAME OVER", COLOR_RED);
+                drawString(44, 60, "A:Restart", COLOR_GRAY);
                 break;
             }
         }
@@ -181,9 +181,9 @@ void DinoGame::update() {
 
 void DinoGame::drawGround() {
     // 地面水平线
-    tft_.fillRect(0, GROUND_Y, 240, 2, COLOR_GRAY);
+    tft_.fillRect(0, GROUND_Y, TFT_WIDTH, 2, COLOR_GRAY);
     // 地面虚线装饰
-    for (int x = frame_ % 8; x < 240; x += 8) {
+    for (int x = frame_ % 8; x < TFT_WIDTH; x += 8) {
         tft_.fillRect(x, GROUND_Y + 3, 4, 2, COLOR_DARKGRAY);
     }
 }
@@ -197,16 +197,16 @@ void DinoGame::drawDino() {
     if (dino_.jumping) bodyColor = COLOR_DARKGRAY;
 
     tft_.fillRect(DINO_X, dinoY, DINO_W, dinoH, bodyColor);
-    // 眼睛
-    tft_.fillRect(DINO_X + 13, dinoY + 4, 4, 4, COLOR_WHITE);
-    tft_.fillRect(DINO_X + 15, dinoY + 5, 2, 2, COLOR_BLACK);
+    // 眼睛 (14x18 dino)
+    tft_.fillRect(DINO_X + 9, dinoY + 3, 3, 3, COLOR_WHITE);
+    tft_.fillRect(DINO_X + 10, dinoY + 4, 1, 1, COLOR_BLACK);
     // 腿
     int legPhase = (frame_ / 4) % 2;
     if (!dino_.jumping) {
-        tft_.fillRect(DINO_X + 2, dinoY + dinoH, 3, 4, bodyColor);
-        tft_.fillRect(DINO_X + 10, dinoY + dinoH - legPhase * 2, 3, 4, bodyColor);
+        tft_.fillRect(DINO_X + 1, dinoY + dinoH, 2, 3, bodyColor);
+        tft_.fillRect(DINO_X + 7, dinoY + dinoH - legPhase * 2, 2, 3, bodyColor);
     } else {
-        tft_.fillRect(DINO_X + 6, dinoY + dinoH, 8, 2, bodyColor);
+        tft_.fillRect(DINO_X + 4, dinoY + dinoH, 6, 2, bodyColor);
     }
 }
 
@@ -319,7 +319,7 @@ void DinoGame::spawnObstacle() {
     for (auto& o : obs_) {
         if (o.active) continue;
         o.active = true;
-        o.x = 240;
+        o.x = 160;
         // 随机选择仙人掌(低)或鸟(高)
         if (rand() % 3 == 0) {
             // 鸟 - 飞在空中
